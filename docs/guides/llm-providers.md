@@ -6,10 +6,64 @@ Merlya supports multiple LLM providers, from cloud APIs to local models.
 
 | Provider | Models | Pros | Cons |
 |----------|--------|------|------|
-| **OpenAI** | GPT-4o, GPT-4o-mini | Best quality, fast | Paid API |
-| **Anthropic** | Claude 3.5 Sonnet | Great reasoning | Paid API |
-| **Ollama** | Qwen, Llama, Mistral | Free, private | Requires GPU/CPU |
-| **Groq** | Llama 3.3, Mixtral | Ultra fast, free tier | Rate limited |
+| **OpenRouter** | 100+ models | Free tier, many models | Variable latency |
+| **Anthropic** | Claude 3.5 Sonnet/Haiku | Great reasoning | Paid API |
+| **OpenAI** | GPT-4o, GPT-4o-mini | Fast, reliable | Paid API |
+| **Ollama** | Llama, Qwen, Mistral | Free, private (local or cloud) | Setup required |
+
+---
+
+## OpenRouter (Default)
+
+OpenRouter is the **default provider** - it offers access to 100+ models including free options.
+
+### Setup
+
+```bash
+merlya config set llm.provider openrouter
+merlya config set llm.api_key or-your-api-key
+merlya config set llm.model amazon/nova-2-lite-v1:free
+```
+
+### Free Models
+
+| Model | Quality | Speed |
+|-------|---------|-------|
+| `amazon/nova-2-lite-v1:free` | Good | Fast |
+| `google/gemini-2.0-flash-lite-001` | Great | Fast |
+| `meta-llama/llama-3.2-3b-instruct:free` | Good | Very fast |
+
+### Premium Models
+
+| Model | Quality | Cost |
+|-------|---------|------|
+| `anthropic/claude-3.5-sonnet` | Excellent | $$ |
+| `openai/gpt-4o` | Excellent | $$ |
+| `google/gemini-pro` | Great | $ |
+
+Get your API key at: [openrouter.ai/keys](https://openrouter.ai/keys)
+
+---
+
+## Anthropic
+
+### Setup
+
+```bash
+merlya config set llm.provider anthropic
+merlya config set llm.api_key sk-ant-your-api-key
+merlya config set llm.model claude-3-5-sonnet-latest
+```
+
+### Recommended Models
+
+| Model | Speed | Quality | Cost |
+|-------|-------|---------|------|
+| `claude-3-5-sonnet-latest` | Fast | Excellent | $$ |
+| `claude-3-5-haiku-latest` | Very fast | Great | $ |
+| `claude-3-opus-latest` | Slow | Best | $$$ |
+
+---
 
 ## OpenAI
 
@@ -18,7 +72,7 @@ Merlya supports multiple LLM providers, from cloud APIs to local models.
 ```bash
 merlya config set llm.provider openai
 merlya config set llm.api_key sk-your-api-key
-merlya config set llm.model gpt-4o-mini
+merlya config set llm.model gpt-4o
 ```
 
 ### Recommended Models
@@ -37,49 +91,51 @@ For Azure OpenAI or proxies:
 merlya config set llm.base_url https://your-endpoint.openai.azure.com
 ```
 
-## Anthropic
+---
 
-### Setup
+## Ollama (Local + Cloud)
 
-```bash
-merlya config set llm.provider anthropic
-merlya config set llm.api_key sk-ant-your-api-key
-merlya config set llm.model claude-3-5-sonnet-20241022
-```
+Ollama supports both **local** and **cloud** deployment.
 
-### Recommended Models
-
-| Model | Speed | Quality | Cost |
-|-------|-------|---------|------|
-| `claude-3-5-sonnet-20241022` | Fast | Excellent | $$ |
-| `claude-3-5-haiku-20241022` | Very fast | Great | $ |
-| `claude-3-opus-20240229` | Slow | Best | $$$ |
-
-## Ollama (Local)
-
-Run models locally with Ollama.
-
-### Setup
+### Local Setup (Free, Private)
 
 ```bash
 # Install Ollama
 curl -fsSL https://ollama.ai/install.sh | sh
 
 # Pull a model
-ollama pull qwen2.5:7b
+ollama pull llama3.2
 
 # Configure Merlya
 merlya config set llm.provider ollama
-merlya config set llm.model qwen2.5:7b
-merlya config set llm.base_url http://localhost:11434
+merlya config set llm.model llama3.2
+# Base URL defaults to http://localhost:11434
 ```
 
-### Recommended Models
+### Cloud Setup (Ollama.com)
+
+For cloud-hosted Ollama:
+
+```bash
+merlya config set llm.provider ollama
+merlya config set llm.model llama3.2-cloud  # "cloud" suffix triggers cloud mode
+merlya config set llm.api_key your-ollama-api-key
+merlya config set llm.base_url https://ollama.com/v1
+```
+
+!!! info "Automatic Cloud Detection"
+    Merlya automatically detects cloud mode when:
+
+    - Model name contains "cloud"
+    - Base URL is not localhost/127.0.0.1
+    - `OLLAMA_API_KEY` environment variable is set
+
+### Recommended Local Models
 
 | Model | RAM | Quality | Speed |
 |-------|-----|---------|-------|
-| `qwen2.5:7b` | 8GB | Great | Fast |
-| `llama3.2:3b` | 4GB | Good | Very fast |
+| `llama3.2` | 4GB | Great | Fast |
+| `qwen2.5:7b` | 8GB | Excellent | Fast |
 | `mistral-nemo:12b` | 16GB | Excellent | Medium |
 | `codellama:13b` | 16GB | Great for code | Medium |
 
@@ -95,75 +151,66 @@ ollama ps
 OLLAMA_GPU_LAYERS=0 ollama serve
 ```
 
-## Groq
+---
 
-Ultra-fast inference with free tier.
+## Provider Selection in Setup Wizard
 
-### Setup
+On first run, Merlya's [setup wizard](../getting-started/quickstart.md#setup-wizard) offers:
 
-```bash
-merlya config set llm.provider groq
-merlya config set llm.api_key gsk_your-api-key
-merlya config set llm.model llama-3.3-70b-versatile
+```
+╭─────────────────────────────────────────────────────────────────╮
+│                      LLM Configuration                          │
+├─────────────────────────────────────────────────────────────────┤
+│  1. OpenRouter (recommended) - Free models available            │
+│  2. Anthropic - Claude models                                   │
+│  3. OpenAI - GPT models                                         │
+│  4. Ollama - Local models (no API key needed)                   │
+╰─────────────────────────────────────────────────────────────────╯
 ```
 
-### Available Models
+---
 
-| Model | Tokens/sec | Quality |
-|-------|------------|---------|
-| `llama-3.3-70b-versatile` | ~300 | Excellent |
-| `llama-3.1-8b-instant` | ~750 | Good |
-| `mixtral-8x7b-32768` | ~500 | Great |
+## Router Fallback Model
 
-### Rate Limits (Free Tier)
+Merlya uses a separate "router" model for intent classification when the local ONNX classifier is unavailable:
 
-- 30 requests/minute
-- 14,400 requests/day
+```bash
+# Configure router fallback (fast, cheap model recommended)
+merlya config set router.llm_fallback openrouter:google/gemini-2.0-flash-lite-001
+```
+
+---
 
 ## Switching Providers
 
-Easily switch between providers:
-
 ```bash
-# Use OpenAI for complex tasks
-merlya config set llm.provider openai
-merlya chat
+# Use OpenRouter for free tier
+merlya config set llm.provider openrouter
+merlya config set llm.model amazon/nova-2-lite-v1:free
 
-# Switch to Ollama for privacy
+# Switch to Anthropic for complex tasks
+merlya config set llm.provider anthropic
+
+# Switch to local Ollama for privacy
 merlya config set llm.provider ollama
-merlya chat
+merlya config set llm.model llama3.2
 ```
+
+---
 
 ## Environment Variables
 
 Override settings with environment variables:
 
 ```bash
-export MERLYA_LLM_PROVIDER=anthropic
-export MERLYA_LLM_API_KEY=sk-ant-xxx
-export MERLYA_LLM_MODEL=claude-3-5-sonnet-20241022
-
-merlya chat  # Uses Anthropic
+export OPENROUTER_API_KEY=or-xxx
+export OPENAI_API_KEY=sk-xxx
+export ANTHROPIC_API_KEY=sk-ant-xxx
+export OLLAMA_API_KEY=xxx  # For cloud Ollama only
+export OLLAMA_BASE_URL=http://localhost:11434/v1
 ```
 
-## Custom Providers
-
-Add custom OpenAI-compatible providers:
-
-```bash
-merlya config set llm.provider openai
-merlya config set llm.base_url https://api.your-provider.com/v1
-merlya config set llm.api_key your-api-key
-merlya config set llm.model your-model-name
-```
-
-Compatible providers:
-
-- Together AI
-- Anyscale
-- Fireworks AI
-- Perplexity
-- Local vLLM/llama.cpp servers
+---
 
 ## Troubleshooting
 
@@ -173,19 +220,22 @@ Compatible providers:
 # Verify API key is set
 merlya config get llm.api_key
 
-# Re-set API key
-merlya config set llm.api_key sk-new-key
+# Re-set API key (stored in keyring)
+merlya config set llm.api_key your-new-key
 ```
 
-### Rate Limiting
+### Keyring Unavailable
 
-```
-Error: Rate limit exceeded
+If you see "Keyring unavailable (in-memory)" warning:
 
-# Solutions:
-# 1. Wait and retry
-# 2. Switch to a different provider
-# 3. Upgrade your API plan
+```bash
+# Linux: Install secret service
+sudo apt install gnome-keyring
+
+# macOS: Keychain should work automatically
+
+# Fallback: Use environment variables instead
+export OPENROUTER_API_KEY=your-key
 ```
 
 ### Ollama Not Responding
@@ -194,8 +244,9 @@ Error: Rate limit exceeded
 # Check if Ollama is running
 curl http://localhost:11434/api/tags
 
-# Restart Ollama
-systemctl restart ollama
-# or
+# Start Ollama
 ollama serve
+
+# Or restart the service
+systemctl restart ollama
 ```

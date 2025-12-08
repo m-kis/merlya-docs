@@ -115,6 +115,7 @@ nav:
       - Quick Start: getting-started/quickstart.md
       - Configuration: getting-started/configuration.md
   - Guides:
+      - REPL Mode: guides/repl-mode.md
       - SSH Management: guides/ssh-management.md
       - LLM Providers: guides/llm-providers.md
       - Automation: guides/automation.md
