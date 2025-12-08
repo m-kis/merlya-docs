@@ -1,11 +1,11 @@
 # CLI Reference
 
-Complete reference for all Merlya CLI commands.
+Complete reference for all Merlya commands.
 
-## Global Options
+## Starting Merlya
 
 ```bash
-merlya [OPTIONS] COMMAND [ARGS]
+merlya [OPTIONS]
 
 Options:
   --version       Show version and exit
@@ -15,244 +15,870 @@ Options:
   --config FILE   Use specific config file
 ```
 
-## Commands
+## REPL Slash Commands
 
-### chat
+Once inside the Merlya REPL, use slash commands to interact with the system.
 
-Start an interactive chat session.
+### Quick Reference
 
-```bash
-merlya chat [OPTIONS]
+| Category | Commands |
+|----------|----------|
+| **Core** | `/help`, `/exit`, `/new`, `/language` |
+| **Hosts** | `/hosts list`, `/hosts add`, `/hosts show`, `/hosts delete`, `/hosts tag`, `/hosts import`, `/hosts export` |
+| **SSH** | `/ssh connect`, `/ssh exec`, `/ssh disconnect`, `/ssh config`, `/ssh test` |
+| **Scan** | `/scan` |
+| **Conversations** | `/conv list`, `/conv show`, `/conv load`, `/conv delete`, `/conv rename`, `/conv search`, `/conv export` |
+| **Model** | `/model show`, `/model provider`, `/model model`, `/model test`, `/model router` |
+| **Variables** | `/variable list`, `/variable set`, `/variable get`, `/variable delete` |
+| **Secrets** | `/secret list`, `/secret set`, `/secret delete` |
+| **System** | `/health`, `/log` |
 
-Options:
-  --model MODEL       Override configured model
-  --provider PROVIDER Override configured provider
-  --system PROMPT     Custom system prompt
-  --history FILE      Load chat history from file
+---
+
+## Core Commands
+
+### /help
+
+Show help for commands.
+
+```
+/help [command]
 ```
 
+**Aliases:** `h`, `?`
+
 **Examples:**
-
-```bash
-# Basic chat
-merlya chat
-
-# Use specific model
-merlya chat --model gpt-4o
-
-# With custom system prompt
-merlya chat --system "You are a Kubernetes expert"
+```
+/help              # Show all commands
+/help hosts        # Help for /hosts command
+/help ssh          # Help for /ssh command
 ```
 
 ---
 
-### run
+### /exit
 
-Execute a single command or task.
+Exit Merlya.
 
-```bash
-merlya run [OPTIONS] PROMPT
-
-Options:
-  -y, --yes           Skip confirmation prompts
-  -f, --file FILE     Load prompts from file
-  --format FORMAT     Output format (text, json, yaml)
-  --timeout SECONDS   Command timeout
+```
+/exit
 ```
 
-**Examples:**
+**Aliases:** `quit`, `q`
 
-```bash
-# Single command
-merlya run "Check disk space on web servers"
+---
 
-# With auto-confirm
-merlya run --yes "Restart nginx on web-01"
+### /new
 
-# JSON output
-merlya run --format json "List all servers"
+Start a new conversation.
+
+```
+/new
 ```
 
 ---
 
-### config
+### /language
 
-Manage configuration settings.
+Change interface language.
 
-```bash
-merlya config COMMAND [ARGS]
-
-Commands:
-  get KEY           Get a configuration value
-  set KEY VALUE     Set a configuration value
-  list              List all configuration
-  reset             Reset to defaults
-  path              Show config file path
+```
+/language <fr|en>
 ```
 
-**Examples:**
+**Aliases:** `lang`
 
-```bash
-# Set LLM provider
-merlya config set llm.provider openai
+**Available Languages:**
 
-# Get current model
-merlya config get llm.model
+- `fr` - French
+- `en` - English
 
-# List all settings
-merlya config list
-
-# Show config file location
-merlya config path
+**Example:**
+```
+/language en
 ```
 
 ---
 
-### hosts
+## Host Management
 
-Manage SSH hosts.
+### /hosts list
 
-```bash
-merlya hosts COMMAND [ARGS]
+List all hosts in inventory.
 
-Commands:
-  list              List all configured hosts
-  add NAME HOST     Add a new host
-  remove NAME       Remove a host
-  show NAME         Show host details
-  test NAME         Test connection to host
-  groups            List host groups
+```
+/hosts list [--tag=<tag>]
 ```
 
+**Options:**
+
+- `--tag=<tag>` - Filter hosts by tag
+
 **Examples:**
-
-```bash
-# List hosts
-merlya hosts list
-
-# Add a host
-merlya hosts add web-01 web-01.example.com --user deploy
-
-# Test connection
-merlya hosts test web-01
-
-# Show host details
-merlya hosts show web-01
+```
+/hosts list
+/hosts list --tag=production
+/hosts list --tag=web
 ```
 
 ---
 
-### connect
+### /hosts add
 
-Connect to a specific host.
+Add a new host interactively.
 
-```bash
-merlya connect [OPTIONS] HOST
-
-Options:
-  -u, --user USER     SSH username
-  -p, --port PORT     SSH port (default: 22)
-  -k, --key FILE      SSH private key
-  -j, --jump HOST     Jump host for connection
+```
+/hosts add <name>
 ```
 
-**Examples:**
+You will be prompted for:
 
-```bash
-# Basic connection
-merlya connect web-01
+- Hostname or IP address
+- SSH port (default: 22)
+- Username
 
-# With specific user
-merlya connect web-01 --user admin
-
-# Through jump host
-merlya connect internal-db --jump bastion
+**Example:**
+```
+/hosts add web-prod-01
 ```
 
 ---
 
-### exec
+### /hosts show
 
-Execute a command on remote hosts.
+Show detailed host information.
 
-```bash
-merlya exec [OPTIONS] HOST COMMAND
-
-Options:
-  --sudo              Run with sudo
-  --timeout SECONDS   Command timeout
-  --parallel          Run on multiple hosts in parallel
+```
+/hosts show <name>
 ```
 
-**Examples:**
+**Displays:**
 
-```bash
-# Run command
-merlya exec web-01 "uptime"
+- Hostname and port
+- Username
+- Connection status
+- Tags
+- OS information
+- Last seen timestamp
 
-# With sudo
-merlya exec web-01 --sudo "systemctl restart nginx"
-
-# On multiple hosts
-merlya exec "web-*" --parallel "df -h"
+**Example:**
+```
+/hosts show web-prod-01
 ```
 
 ---
 
-### upload / download
+### /hosts delete
 
-Transfer files to/from remote hosts.
+Delete a host from inventory.
 
-```bash
-merlya upload [OPTIONS] LOCAL_FILE HOST:REMOTE_PATH
-merlya download [OPTIONS] HOST:REMOTE_PATH LOCAL_FILE
-
-Options:
-  --recursive         Transfer directories
-  --preserve          Preserve permissions
+```
+/hosts delete <name>
 ```
 
-**Examples:**
+Requires confirmation before deletion.
 
-```bash
-# Upload file
-merlya upload config.yml web-01:/etc/app/
-
-# Download file
-merlya download web-01:/var/log/app.log ./
-
-# Upload directory
-merlya upload --recursive ./configs/ web-01:/etc/app/
+**Example:**
+```
+/hosts delete old-server
 ```
 
 ---
 
-### logs
+### /hosts tag
 
-View and manage logs.
+Add a tag to a host.
 
-```bash
-merlya logs [OPTIONS]
-
-Options:
-  --lines N           Show last N lines (default: 50)
-  --follow            Follow log output
-  --level LEVEL       Filter by log level
-  --clear             Clear log file
 ```
+/hosts tag <name> <tag>
+```
+
+**Example:**
+```
+/hosts tag web-prod-01 production
+/hosts tag web-prod-01 nginx
+```
+
+---
+
+### /hosts untag
+
+Remove a tag from a host.
+
+```
+/hosts untag <name> <tag>
+```
+
+**Example:**
+```
+/hosts untag web-prod-01 deprecated
+```
+
+---
+
+### /hosts edit
+
+Edit host configuration interactively.
+
+```
+/hosts edit <name>
+```
+
+You can modify:
+
+- Hostname
+- Port
+- Username
+- Tags
+
+**Example:**
+```
+/hosts edit web-prod-01
+```
+
+---
+
+### /hosts import
+
+Import hosts from a file.
+
+```
+/hosts import <file> [--format=<format>]
+```
+
+**Supported Formats:**
+
+| Format | Description |
+|--------|-------------|
+| `json` | JSON array of host objects |
+| `yaml` | YAML host configuration |
+| `csv` | CSV with columns: name, hostname, port, username, tags |
+| `ssh` | SSH config file format (`~/.ssh/config`) |
+| `etc_hosts` | Linux `/etc/hosts` format |
 
 **Examples:**
-
-```bash
-# View recent logs
-merlya logs
-
-# Follow logs
-merlya logs --follow
-
-# Filter errors
-merlya logs --level ERROR
 ```
+/hosts import ~/hosts.json --format=json
+/hosts import ~/.ssh/config --format=ssh
+/hosts import /etc/hosts --format=etc_hosts
+```
+
+---
+
+### /hosts export
+
+Export hosts to a file.
+
+```
+/hosts export <file> [--format=<format>]
+```
+
+**Supported Formats:** `json`, `yaml`, `csv`
+
+**Example:**
+```
+/hosts export ~/backup.json --format=json
+```
+
+---
+
+## SSH Management
+
+### /ssh connect
+
+Connect to a host.
+
+```
+/ssh connect <host>
+```
+
+Supports passphrase prompts and MFA/2FA authentication.
+
+**Examples:**
+```
+/ssh connect web-prod-01
+/ssh connect @web-prod-01
+```
+
+---
+
+### /ssh exec
+
+Execute a command on a remote host.
+
+```
+/ssh exec <host> <command>
+```
+
+Returns exit code, stdout, and stderr.
+
+**Examples:**
+```
+/ssh exec @web-prod-01 "uptime"
+/ssh exec @db-01 "df -h"
+/ssh exec @web-prod-01 "systemctl status nginx"
+```
+
+---
+
+### /ssh disconnect
+
+Disconnect from a host or all hosts.
+
+```
+/ssh disconnect [host]
+```
+
+Without arguments, disconnects from all hosts.
+
+**Examples:**
+```
+/ssh disconnect web-prod-01    # Disconnect from specific host
+/ssh disconnect                # Disconnect from all hosts
+```
+
+---
+
+### /ssh config
+
+Configure SSH settings for a host.
+
+```
+/ssh config <host>
+```
+
+You will be prompted for:
+
+- Username
+- Port
+- Private key path
+- Jump host (optional)
+
+**Example:**
+```
+/ssh config web-prod-01
+```
+
+---
+
+### /ssh test
+
+Test SSH connection with diagnostics.
+
+```
+/ssh test <host>
+```
+
+**Shows:**
+
+- SSH configuration used
+- Connection time
+- OS information
+- Troubleshooting hints for common errors
+
+**Example:**
+```
+/ssh test web-prod-01
+```
+
+---
+
+## Scanning & Diagnostics
+
+### /scan
+
+Scan hosts for system information and security issues.
+
+```
+/scan <host> [<host2> ...] [options]
+```
+
+**Scan Types:**
+
+| Option | Description |
+|--------|-------------|
+| `--full` | Complete scan (default) |
+| `--quick` | Fast check: CPU, memory, disk, ports |
+| `--security` | Security checks only |
+| `--system` | System checks only |
+
+**Output Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON |
+
+**Additional Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--all-disks` | Check all mounted filesystems |
+| `--show-all` | Show all ports and users (no truncation) |
+| `--no-docker` | Skip Docker checks |
+| `--no-updates` | Skip pending updates check |
+
+**What It Checks:**
+
+**System:**
+
+- CPU usage and load
+- Memory usage
+- Disk usage
+- Docker containers
+- System information (OS, kernel, uptime)
+
+**Security:**
+
+- Open ports
+- SSH configuration
+- Users and groups
+- SSH keys
+- Sudo configuration
+- Running services
+- Failed login attempts
+- Pending security updates
+
+**Severity Scoring:** 0-100 scale based on issues found.
+
+**Examples:**
+```
+/scan @web-prod-01
+/scan @web-prod-01 --quick
+/scan @web-prod-01 @db-01 --security
+/scan @web-prod-01 --full --json
+```
+
+---
+
+### /health
+
+Show system health status.
+
+```
+/health
+```
+
+Displays health check results and capabilities.
+
+---
+
+### /log
+
+Configure and view logging.
+
+```
+/log [subcommand]
+```
+
+**Subcommands:**
+
+| Subcommand | Description |
+|------------|-------------|
+| (none) | Show logging configuration |
+| `level <level>` | Change log level |
+| `show` | Show recent log entries |
+
+**Log Levels:** `debug`, `info`, `warning`, `error`
+
+**Examples:**
+```
+/log
+/log level debug
+/log show
+```
+
+---
+
+## Conversation Management
+
+### /conv list
+
+List recent conversations.
+
+```
+/conv list [--limit=N]
+```
+
+**Options:**
+
+- `--limit=N` - Number of conversations to show (default: 10)
+
+**Displays:**
+
+- Conversation ID
+- Title
+- Message count
+- Last updated
+
+**Example:**
+```
+/conv list --limit=20
+```
+
+**Aliases:** `conversation`
+
+---
+
+### /conv show
+
+Show conversation details.
+
+```
+/conv show <id>
+```
+
+**Displays:**
+
+- Title
+- Created date
+- Message count
+- Summary
+- Recent messages
+
+**Example:**
+```
+/conv show abc12345
+```
+
+---
+
+### /conv load
+
+Load and resume a conversation.
+
+```
+/conv load <id>
+```
+
+Supports partial ID matching (prefix).
+
+**Example:**
+```
+/conv load abc12345
+/conv load abc        # Matches by prefix
+```
+
+---
+
+### /conv delete
+
+Delete a conversation.
+
+```
+/conv delete <id>
+```
+
+Requires confirmation.
+
+**Example:**
+```
+/conv delete abc12345
+```
+
+---
+
+### /conv rename
+
+Rename a conversation.
+
+```
+/conv rename <id> <title>
+```
+
+**Example:**
+```
+/conv rename abc12345 "Server Migration Analysis"
+```
+
+---
+
+### /conv search
+
+Search in conversation history.
+
+```
+/conv search <query>
+```
+
+**Example:**
+```
+/conv search "security issues"
+/conv search "nginx configuration"
+```
+
+---
+
+### /conv export
+
+Export conversation to file.
+
+```
+/conv export <id> <file>
+```
+
+**Supported Formats:**
+
+- `.json` - JSON format
+- `.md` - Markdown format
+
+**Example:**
+```
+/conv export abc12345 ~/my_conversation.md
+/conv export abc12345 ~/backup.json
+```
+
+---
+
+## Model & LLM Management
+
+### /model show
+
+Show current model configuration.
+
+```
+/model show
+```
+
+**Displays:**
+
+- Provider name
+- Model name
+- API key status
+- Router type
+- Tier
+- Fallback model
+
+---
+
+### /model provider
+
+Change LLM provider.
+
+```
+/model provider <name>
+```
+
+**Available Providers:**
+
+| Provider | Description |
+|----------|-------------|
+| `openrouter` | OpenRouter (100+ models, free tier available) |
+| `anthropic` | Anthropic Claude models |
+| `openai` | OpenAI GPT models |
+| `ollama` | Ollama (local or cloud) |
+| `litellm` | LiteLLM proxy |
+
+Prompts for API key if not configured.
+
+**Example:**
+```
+/model provider openai
+/model provider openrouter
+```
+
+---
+
+### /model model
+
+Change the LLM model.
+
+```
+/model model <name>
+```
+
+For Ollama, automatically detects cloud vs local endpoints.
+
+**Examples:**
+```
+/model model gpt-4o
+/model model claude-3-5-sonnet-20241022
+/model model llama3.2
+```
+
+---
+
+### /model test
+
+Test LLM connection.
+
+```
+/model test
+```
+
+Tests multiple model candidates and shows latency.
+
+---
+
+### /model router
+
+Configure intent router.
+
+```
+/model router <show|local|llm>
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `show` | Show router configuration |
+| `local` | Use local ONNX model for routing |
+| `llm <model>` | Use LLM for intent routing |
+
+**Examples:**
+```
+/model router show
+/model router local
+/model router llm gpt-3.5-turbo
+```
+
+---
+
+## Variable Management
+
+### /variable list
+
+List all variables.
+
+```
+/variable list
+```
+
+**Aliases:** `var`
+
+**Displays:**
+
+- Variable name
+- Value (truncated)
+- Type (regular or environment)
+
+---
+
+### /variable set
+
+Set a variable.
+
+```
+/variable set <name> <value> [--env]
+```
+
+**Options:**
+
+- `--env` - Mark as environment variable
+
+**Examples:**
+```
+/variable set region eu-west-1
+/variable set api_url "https://api.example.com" --env
+```
+
+---
+
+### /variable get
+
+Get a variable value.
+
+```
+/variable get <name>
+```
+
+**Example:**
+```
+/variable get region
+```
+
+---
+
+### /variable delete
+
+Delete a variable.
+
+```
+/variable delete <name>
+```
+
+**Example:**
+```
+/variable delete old_var
+```
+
+---
+
+## Secret Management
+
+Secrets are stored securely in the system keyring.
+
+### /secret list
+
+List all secret names.
+
+```
+/secret list
+```
+
+Values are never displayed.
+
+---
+
+### /secret set
+
+Set a secret securely.
+
+```
+/secret set <name>
+```
+
+Uses secure input prompt (no echo).
+
+**Example:**
+```
+/secret set my_api_key
+```
+
+---
+
+### /secret delete
+
+Delete a secret.
+
+```
+/secret delete <name>
+```
+
+**Example:**
+```
+/secret delete old_api_key
+```
+
+---
+
+## Mentions
+
+You can mention entities in your chat messages:
+
+| Syntax | Description |
+|--------|-------------|
+| `@hostname` | Reference a host from inventory |
+| `@variable_name` | Reference a variable value |
+| `@secret_name` | Reference a secret (not logged) |
+
+**Examples:**
+```
+Check disk usage on @web-prod-01
+Deploy to @staging using @deploy_key
+What's the status of @nodeapp on @server1
+```
+
+---
+
+## Autocompletion
+
+The REPL supports Tab autocompletion for:
+
+- **Slash commands** - Type `/` and press Tab
+- **Host mentions** - Type `@` and press Tab
+- **Variable mentions** - Type `@` and press Tab
+- **Command history** - Use Up/Down arrows
 
 ---
 
@@ -268,13 +894,16 @@ merlya logs --level ERROR
 | 5 | Command execution error |
 | 130 | Interrupted (Ctrl+C) |
 
+---
+
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
+| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `OPENROUTER_API_KEY` | OpenRouter API key |
+| `MERLYA_ROUTER_FALLBACK` | LLM fallback model |
+| `MERLYA_LOG_LEVEL` | Log level (debug, info, warning, error) |
 | `MERLYA_CONFIG` | Config file path |
-| `MERLYA_LLM_PROVIDER` | LLM provider |
-| `MERLYA_LLM_API_KEY` | LLM API key |
-| `MERLYA_LLM_MODEL` | LLM model name |
-| `MERLYA_LOG_LEVEL` | Logging level |
-| `MERLYA_SSH_TIMEOUT` | SSH timeout |
+| `MERLYA_SSH_TIMEOUT` | SSH connection timeout |

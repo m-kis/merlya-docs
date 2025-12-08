@@ -61,21 +61,24 @@ Merlya is an AI-powered infrastructure assistant CLI tool for DevOps and SRE tea
 
 ## Key Features
 - Natural language interface for infrastructure tasks
-- SSH connection management with pooling
+- SSH connection management with pooling and MFA/2FA support
 - Multiple LLM provider support (OpenRouter, OpenAI, Anthropic, Ollama)
 - Setup wizard for first-run configuration
 - REPL mode with autocompletion and @ mentions
 - Host discovery from SSH config, known_hosts, /etc/hosts, Ansible
+- Security scanning with severity scoring
 
 ## Installation
 \`\`\`bash
-pip install merlya
+pip install merlya          # Standard
+pip install merlya[router]  # With ONNX router
+pip install merlya[all]     # All extras
 \`\`\`
 
 ## Quick Start
-1. Run \`merlya chat\` - setup wizard runs on first launch
+1. Run \`merlya\` - setup wizard runs on first launch
 2. Select LLM provider (OpenRouter recommended - free tier)
-3. Enter API key
+3. Enter API key (stored in system keyring)
 4. Import hosts from SSH config/known_hosts
 5. Start chatting!
 
@@ -84,26 +87,79 @@ pip install merlya
 - **OpenAI**: GPT-4o, GPT-4o-mini
 - **Anthropic**: Claude 3.5 Sonnet/Haiku
 - **Ollama**: Local (free) or Cloud deployment
+- **LiteLLM**: Proxy for multiple providers
 
-## REPL Features
-- Slash commands: /help, /hosts, /new, /exit, /conversations
-- @ mentions: @hostname to reference servers
-- Autocompletion with Tab
-- Command history with Up/Down arrows
+## Slash Commands Reference
+
+### Core Commands
+- \`/help [command]\` - Show help (aliases: h, ?)
+- \`/exit\` - Exit Merlya (aliases: quit, q)
+- \`/new\` - Start new conversation
+- \`/language <fr|en>\` - Change language
+
+### Host Management (/hosts)
+- \`/hosts list [--tag=TAG]\` - List hosts
+- \`/hosts add <name>\` - Add host interactively
+- \`/hosts show <name>\` - Show host details
+- \`/hosts delete <name>\` - Delete host
+- \`/hosts tag <name> <tag>\` - Add tag
+- \`/hosts untag <name> <tag>\` - Remove tag
+- \`/hosts edit <name>\` - Edit host
+- \`/hosts import <file> [--format=FORMAT]\` - Import (json/yaml/csv/ssh/etc_hosts)
+- \`/hosts export <file> [--format=FORMAT]\` - Export
+
+### SSH Management (/ssh)
+- \`/ssh connect <host>\` - Connect with MFA support
+- \`/ssh exec <host> <command>\` - Execute remote command
+- \`/ssh disconnect [host]\` - Disconnect
+- \`/ssh config <host>\` - Configure SSH settings
+- \`/ssh test <host>\` - Test connection with diagnostics
+
+### Scanning (/scan)
+- \`/scan <host> [options]\` - Scan host for issues
+  Options: --full, --quick, --security, --system, --json
+  Checks: CPU, memory, disk, ports, SSH config, users, services, updates
+
+### Conversations (/conv)
+- \`/conv list [--limit=N]\` - List conversations
+- \`/conv show <id>\` - Show details
+- \`/conv load <id>\` - Resume conversation
+- \`/conv delete <id>\` - Delete
+- \`/conv rename <id> <title>\` - Rename
+- \`/conv search <query>\` - Search history
+- \`/conv export <id> <file>\` - Export (.json/.md)
+
+### Model Management (/model)
+- \`/model show\` - Show current config
+- \`/model provider <name>\` - Change provider
+- \`/model model <name>\` - Change model
+- \`/model test\` - Test LLM connection
+- \`/model router <show|local|llm>\` - Configure router
+
+### Variables (/variable or /var)
+- \`/variable list\` - List variables
+- \`/variable set <name> <value> [--env]\` - Set variable
+- \`/variable get <name>\` - Get value
+- \`/variable delete <name>\` - Delete
+
+### Secrets (/secret) - Stored in system keyring
+- \`/secret list\` - List secret names
+- \`/secret set <name>\` - Set (secure prompt)
+- \`/secret delete <name>\` - Delete
+
+### System
+- \`/health\` - Show system health
+- \`/log [level <debug|info|warning|error>]\` - Configure logging
+
+## Mentions
+- \`@hostname\` - Reference a host
+- \`@variable\` - Reference a variable
+- \`@secret\` - Reference a secret (not logged)
 
 ## Configuration
 - Config file: ~/.merlya/config.yaml
-- API keys stored in system keyring (secure)
-- Hosts stored in SQLite database
-
-## Commands
-- \`merlya chat\` - Start REPL
-- \`merlya config set KEY VALUE\` - Set config
-- \`/hosts\` - List hosts (in REPL)
-- \`/help\` - Show commands (in REPL)
-
-## Warning
-Merlya is experimental software. Always review commands before executing on production.
+- API keys: stored in system keyring
+- Hosts: SQLite database
 
 ## Links
 - GitHub: https://github.com/m-kis/merlya
