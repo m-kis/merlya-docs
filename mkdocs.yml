@@ -108,6 +108,9 @@ extra:
 extra_css:
   - assets/stylesheets/extra.css
 
+extra_javascript:
+  - assets/javascripts/chat.js
+
 nav:
   - Home: index.md
   - Getting Started:
