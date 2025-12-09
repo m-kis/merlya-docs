@@ -214,6 +214,7 @@ db-01    | 10.0.1.50            | admin  | known-hosts
 ## Next Steps
 
 - [REPL Mode](../guides/repl-mode.md) - Deep dive into the interactive interface
+- [Automation Guide](../guides/automation.md) - Non-interactive mode, CI/CD, scripting
 - [Configuration Guide](configuration.md) - Advanced configuration options
 - [SSH Management](../guides/ssh-management.md) - SSH features and connection pooling
 - [LLM Providers](../guides/llm-providers.md) - Configure different LLM providers
