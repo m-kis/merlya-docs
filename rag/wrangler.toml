@@ -1,7 +1,7 @@
 name = "merlya-docs-rag"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
-account_id = "5655286b55e631763dc29c8eb6653b7e"
+account_id = "551a8b7bc2e3348ede61a4ce256349a7"
 
 [vars]
 CORS_ORIGIN = "https://m-kis.github.io"
