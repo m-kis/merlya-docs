@@ -33,7 +33,7 @@ merlya --version
 You should see output like:
 
 ```
-merlya 0.5.6
+merlya 0.6.0
 ```
 
 ## Shell Completion

@@ -6,314 +6,478 @@ Complete reference for all configuration options.
 
 | File | Purpose |
 |------|---------|
-| `~/.config/merlya/config.toml` | Main configuration |
-| `~/.config/merlya/hosts.toml` | SSH hosts definitions |
-| `~/.config/merlya/history.json` | Chat history |
+| `~/.merlya/config.yaml` | Main configuration |
+| `~/.merlya/merlya.db` | Hosts inventory (SQLite) |
+| `~/.merlya/history` | Command history |
+| `~/.merlya/logs/` | Log files |
 
-## LLM Settings
+---
 
-### llm.provider
+## General Settings
+
+### general.language
+
+UI language.
+
+| Type | Default | Values |
+|------|---------|--------|
+| string | `en` | `en`, `fr` |
+
+```yaml
+general:
+  language: en
+```
+
+---
+
+### general.log_level
+
+Console log level.
+
+| Type | Default | Values |
+|------|---------|--------|
+| string | `info` | `debug`, `info`, `warning`, `error` |
+
+```yaml
+general:
+  log_level: info
+```
+
+---
+
+### general.data_dir
+
+Data directory path.
+
+| Type | Default |
+|------|---------|
+| string | `~/.merlya` |
+
+```yaml
+general:
+  data_dir: ~/.merlya
+```
+
+---
+
+## Model Settings
+
+### model.provider
 
 LLM provider to use.
 
 | Type | Default | Values |
 |------|---------|--------|
-| string | `openai` | `openai`, `anthropic`, `ollama`, `groq` |
+| string | `openrouter` | `openrouter`, `anthropic`, `openai`, `ollama` |
 
-```toml
-[llm]
-provider = "openai"
+```yaml
+model:
+  provider: openrouter
 ```
 
 ---
 
-### llm.model
+### model.model
 
 Model name/identifier.
 
 | Type | Default |
 |------|---------|
-| string | `gpt-4o-mini` |
+| string | `amazon/nova-2-lite-v1:free` |
 
-```toml
-[llm]
-model = "gpt-4o-mini"
+```yaml
+model:
+  model: amazon/nova-2-lite-v1:free
 ```
 
-**Provider-specific defaults:**
+**Provider-specific examples:**
 
-| Provider | Default Model |
+| Provider | Example Model |
 |----------|---------------|
-| OpenAI | `gpt-4o-mini` |
-| Anthropic | `claude-3-5-sonnet-20241022` |
-| Ollama | `qwen2.5:7b` |
-| Groq | `llama-3.3-70b-versatile` |
+| OpenRouter | `amazon/nova-2-lite-v1:free`, `anthropic/claude-3.5-sonnet` |
+| Anthropic | `claude-3-5-sonnet-latest`, `claude-3-5-haiku-latest` |
+| OpenAI | `gpt-4o`, `gpt-4o-mini` |
+| Ollama | `llama3.2`, `qwen2.5:7b` |
 
 ---
 
-### llm.api_key
+### model.api_key_env
 
-API key for the provider. Stored securely in system keyring.
+Environment variable name for API key.
 
 | Type | Default |
 |------|---------|
-| string | _(none)_ |
+| string | _(auto-detected)_ |
 
-```bash
-# Set via CLI (recommended)
-merlya config set llm.api_key sk-your-key
+```yaml
+model:
+  api_key_env: OPENROUTER_API_KEY
 ```
 
-!!! warning "Security"
-    API keys are stored in your system's secure keyring, not in config files.
+!!! info "API Key Storage"
+    API keys are stored securely in your system's keyring, not in config files.
+    The `api_key_env` setting specifies which environment variable to check.
 
 ---
 
-### llm.base_url
+### model.base_url
 
-Custom API endpoint URL.
+Custom API endpoint URL (for Ollama or custom providers).
 
 | Type | Default |
 |------|---------|
 | string | Provider default |
 
-```toml
-[llm]
-base_url = "https://api.your-provider.com/v1"
+```yaml
+model:
+  base_url: http://localhost:11434/v1
 ```
 
 ---
 
-### llm.temperature
+## Router Settings
 
-Response randomness (0 = deterministic, 1 = creative).
+The router classifies user intent to determine appropriate actions.
 
-| Type | Default | Range |
-|------|---------|-------|
-| float | `0.7` | 0.0 - 1.0 |
+### router.type
 
-```toml
-[llm]
-temperature = 0.7
+Router type for intent classification.
+
+| Type | Default | Values |
+|------|---------|--------|
+| string | `local` | `local`, `llm` |
+
+- `local`: Uses local ONNX embedding model (faster, offline)
+- `llm`: Uses LLM for classification (more accurate, requires API)
+
+```yaml
+router:
+  type: local
 ```
 
 ---
 
-### llm.max_tokens
+### router.model
 
-Maximum response length in tokens.
+Local embedding model ID (when `type: local`).
 
-| Type | Default | Range |
-|------|---------|-------|
-| integer | `4096` | 1 - model max |
+| Type | Default |
+|------|---------|
+| string | _(auto-selected by tier)_ |
 
-```toml
-[llm]
-max_tokens = 4096
+```yaml
+router:
+  model: sentence-transformers/all-MiniLM-L6-v2
+```
+
+---
+
+### router.tier
+
+Model tier for local router.
+
+| Type | Default | Values |
+|------|---------|--------|
+| string | `balanced` | `performance`, `balanced`, `lightweight` |
+
+```yaml
+router:
+  tier: balanced
+```
+
+---
+
+### router.llm_fallback
+
+LLM model for fallback classification.
+
+| Type | Default |
+|------|---------|
+| string | `openrouter:google/gemini-2.0-flash-lite-001` |
+
+```yaml
+router:
+  llm_fallback: openrouter:google/gemini-2.0-flash-lite-001
 ```
 
 ---
 
 ## SSH Settings
 
-### ssh.timeout
+### ssh.connect_timeout
 
 Connection timeout in seconds.
 
-| Type | Default |
-|------|---------|
-| integer | `30` |
+| Type | Default | Range |
+|------|---------|-------|
+| integer | `30` | 5 - 120 |
 
-```toml
-[ssh]
-timeout = 30
+```yaml
+ssh:
+  connect_timeout: 30
 ```
 
 ---
 
-### ssh.max_connections
+### ssh.pool_timeout
 
-Maximum concurrent SSH connections.
+Connection pool timeout in seconds.
 
 | Type | Default | Range |
 |------|---------|-------|
-| integer | `10` | 1 - 100 |
+| integer | `600` | 60 - 3600 |
 
-```toml
-[ssh]
-max_connections = 10
+```yaml
+ssh:
+  pool_timeout: 600
 ```
 
 ---
 
-### ssh.retry_attempts
+### ssh.command_timeout
 
-Number of retry attempts for failed connections.
+Command execution timeout in seconds.
 
-| Type | Default |
-|------|---------|
-| integer | `3` |
+| Type | Default | Range |
+|------|---------|-------|
+| integer | `60` | 5 - 3600 |
 
-```toml
-[ssh]
-retry_attempts = 3
+```yaml
+ssh:
+  command_timeout: 60
 ```
 
 ---
 
-### ssh.retry_delay
+### ssh.default_user
 
-Delay between retry attempts in seconds.
-
-| Type | Default |
-|------|---------|
-| integer | `5` |
-
-```toml
-[ssh]
-retry_delay = 5
-```
-
----
-
-### ssh.known_hosts
-
-Path to known_hosts file.
+Default SSH username.
 
 | Type | Default |
 |------|---------|
-| string | `~/.ssh/known_hosts` |
+| string | _(none)_ |
 
-```toml
-[ssh]
-known_hosts = "~/.ssh/known_hosts"
+```yaml
+ssh:
+  default_user: deploy
 ```
 
 ---
 
 ### ssh.default_key
 
-Default SSH private key.
+Default SSH private key path.
 
 | Type | Default |
 |------|---------|
-| string | `~/.ssh/id_ed25519` |
+| string | _(none)_ |
 
-```toml
-[ssh]
-default_key = "~/.ssh/id_ed25519"
+```yaml
+ssh:
+  default_key: ~/.ssh/id_ed25519
+```
+
+---
+
+## UI Settings
+
+### ui.theme
+
+Color theme.
+
+| Type | Default | Values |
+|------|---------|--------|
+| string | `auto` | `auto`, `light`, `dark` |
+
+```yaml
+ui:
+  theme: auto
+```
+
+---
+
+### ui.markdown
+
+Enable markdown rendering in responses.
+
+| Type | Default |
+|------|---------|
+| boolean | `true` |
+
+```yaml
+ui:
+  markdown: true
+```
+
+---
+
+### ui.syntax_highlight
+
+Enable syntax highlighting for code blocks.
+
+| Type | Default |
+|------|---------|
+| boolean | `true` |
+
+```yaml
+ui:
+  syntax_highlight: true
 ```
 
 ---
 
 ## Logging Settings
 
-### logging.level
+### logging.file_level
 
-Logging verbosity level.
+File log level.
 
 | Type | Default | Values |
 |------|---------|--------|
-| string | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| string | `debug` | `debug`, `info`, `warning`, `error` |
 
-```toml
-[logging]
-level = "INFO"
+```yaml
+logging:
+  file_level: debug
 ```
 
 ---
 
-### logging.file
-
-Log file path.
-
-| Type | Default |
-|------|---------|
-| string | `~/.config/merlya/merlya.log` |
-
-```toml
-[logging]
-file = "~/.config/merlya/merlya.log"
-```
-
----
-
-### logging.max_size
+### logging.max_size_mb
 
 Maximum log file size in MB before rotation.
 
-| Type | Default |
-|------|---------|
-| integer | `10` |
+| Type | Default | Range |
+|------|---------|-------|
+| integer | `10` | 1 - 100 |
 
-```toml
-[logging]
-max_size = 10
+```yaml
+logging:
+  max_size_mb: 10
+```
+
+---
+
+### logging.max_files
+
+Maximum number of log files to keep.
+
+| Type | Default | Range |
+|------|---------|-------|
+| integer | `5` | 1 - 20 |
+
+```yaml
+logging:
+  max_files: 5
+```
+
+---
+
+### logging.retention_days
+
+Log retention in days.
+
+| Type | Default | Range |
+|------|---------|-------|
+| integer | `7` | 1 - 90 |
+
+```yaml
+logging:
+  retention_days: 7
 ```
 
 ---
 
 ## Hosts Configuration
 
-Define hosts in `~/.config/merlya/hosts.toml`:
+Hosts are stored in a SQLite database and managed via the `/hosts` commands.
 
-```toml
-# Individual host
-[hosts.web-01]
-hostname = "web-01.example.com"
-user = "deploy"
-port = 22
-key = "~/.ssh/deploy_key"
+### Host Properties
 
-# Host with jump host
-[hosts.internal-db]
-hostname = "10.0.1.50"
-user = "dbadmin"
-jump_host = "bastion.example.com"
-
-# Host group
-[groups.web-tier]
-hosts = ["web-01", "web-02", "web-03"]
-description = "Web server tier"
-
-[groups.databases]
-hosts = ["db-master", "db-replica-01"]
-description = "Database tier"
-```
-
-### Host Options
-
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | Yes | Unique host identifier |
 | `hostname` | string | Yes | Server hostname or IP |
-| `user` | string | No | SSH username |
 | `port` | integer | No | SSH port (default: 22) |
-| `key` | string | No | SSH private key path |
+| `username` | string | No | SSH username |
+| `private_key` | string | No | SSH private key path |
 | `jump_host` | string | No | Jump/bastion host name |
 | `tags` | array | No | Tags for filtering |
+
+### Managing Hosts
+
+```bash
+# Add a host
+/hosts add web-01
+
+# Import from SSH config
+/hosts import ~/.ssh/config --format=ssh
+
+# List hosts
+/hosts list
+
+# Show host details
+/hosts show web-01
+
+# Add tags
+/hosts tag web-01 production
+
+# Delete a host
+/hosts delete old-server
+```
 
 ---
 
 ## Complete Example
 
-```toml
-# ~/.config/merlya/config.toml
+```yaml
+# ~/.merlya/config.yaml
 
-[llm]
-provider = "openai"
-model = "gpt-4o-mini"
-temperature = 0.7
-max_tokens = 4096
+general:
+  language: en
+  log_level: info
 
-[ssh]
-timeout = 30
-max_connections = 10
-retry_attempts = 3
-retry_delay = 5
-default_key = "~/.ssh/id_ed25519"
+model:
+  provider: openrouter
+  model: amazon/nova-2-lite-v1:free
+  api_key_env: OPENROUTER_API_KEY
 
-[logging]
-level = "INFO"
-file = "~/.config/merlya/merlya.log"
-max_size = 10
+router:
+  type: local
+  tier: balanced
+  llm_fallback: openrouter:google/gemini-2.0-flash-lite-001
+
+ssh:
+  connect_timeout: 30
+  pool_timeout: 600
+  command_timeout: 60
+  default_user: deploy
+  default_key: ~/.ssh/id_ed25519
+
+ui:
+  theme: auto
+  markdown: true
+  syntax_highlight: true
+
+logging:
+  file_level: debug
+  max_size_mb: 10
+  max_files: 5
+  retention_days: 7
 ```
+
+---
+
+## Environment Variables
+
+Override settings with environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENROUTER_API_KEY` | OpenRouter API key |
+| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `OLLAMA_API_KEY` | Ollama cloud API key |
+| `MERLYA_LOG_LEVEL` | Override log level |
+| `MERLYA_ROUTER_FALLBACK` | Override router fallback model |
+| `MERLYA_ROUTER_MODEL` | Override local router model |

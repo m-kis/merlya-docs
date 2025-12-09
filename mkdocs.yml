@@ -124,6 +124,7 @@ nav:
       - Automation: guides/automation.md
   - Reference:
       - CLI Commands: reference/cli.md
+      - Non-Interactive Mode: reference/non-interactive.md
       - Configuration: reference/configuration.md
       - API: reference/api.md
   - Architecture:

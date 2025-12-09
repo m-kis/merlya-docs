@@ -160,24 +160,41 @@ User Input → Intent Classifier → [Simple Intent] → Direct Handler
 
 ---
 
-## ADR-006: TOML Configuration
+## ADR-006: YAML Configuration with SQLite Storage
 
 **Status:** Accepted
 
-**Context:** Configuration needs to be human-readable and editable.
+**Context:** Configuration needs to be human-readable and editable. Host inventory requires structured storage with querying capabilities.
 
-**Decision:** Use TOML for configuration files.
+**Decision:** Use YAML for configuration files and SQLite for host inventory.
 
 **Rationale:**
-- Human-friendly syntax
-- Good Python support (tomllib in stdlib)
-- Hierarchical structure
-- Comments supported
-- Industry standard for Python projects
+- YAML: Human-friendly syntax, widely used in DevOps
+- YAML: Native support for complex structures
+- SQLite: Fast querying for host lookups
+- SQLite: Supports tagging, filtering, and search
+- SQLite: Single file, no server needed
 
 **File Locations:**
-- `~/.config/merlya/config.toml` - Main config
-- `~/.config/merlya/hosts.toml` - SSH hosts
+- `~/.merlya/config.yaml` - Main configuration
+- `~/.merlya/merlya.db` - Host inventory (SQLite)
+- `~/.merlya/logs/` - Log files
+- `~/.merlya/history` - Command history
+
+**Configuration Example:**
+```yaml
+general:
+  language: en
+  log_level: info
+
+model:
+  provider: openrouter
+  model: amazon/nova-2-lite-v1:free
+
+ssh:
+  connect_timeout: 30
+  pool_timeout: 600
+```
 
 ---
 
@@ -212,19 +229,30 @@ class MyTool(MerlyaTool):
 
 ---
 
-## ADR-008: Structured Logging
+## ADR-008: Loguru for Logging
 
 **Status:** Accepted
 
-**Context:** Debugging and monitoring require good logging.
+**Context:** Debugging and monitoring require good logging with minimal configuration.
 
-**Decision:** Use structlog for structured logging.
+**Decision:** Use [loguru](https://github.com/Delgan/loguru) for logging.
 
 **Rationale:**
-- Structured output (JSON for production)
-- Human-readable for development
-- Context binding for request tracing
-- Performance optimized
+- Zero-configuration out of the box
+- Automatic rotation and retention
+- Human-readable colored output for development
+- Exception catching with full traceback
+- Easy to use API (`logger.info()`, `logger.error()`)
+- Async-safe
+
+**Implementation:**
+```python
+from loguru import logger
+
+logger.info("✅ Operation completed successfully")
+logger.warning("⚠️ Connection retry required")
+logger.error("❌ SSH connection failed: {error}", error=e)
+```
 
 **Log Levels:**
 - DEBUG: Detailed execution flow
@@ -232,21 +260,24 @@ class MyTool(MerlyaTool):
 - WARNING: Recoverable issues
 - ERROR: Failures requiring attention
 
+**Emoji Convention:**
+All log messages use emojis for visual clarity (see CONTRIBUTING.md).
+
 ---
 
 ## ADR-009: Multi-Provider LLM Support
 
 **Status:** Accepted
 
-**Context:** Users have different LLM provider preferences.
+**Context:** Users have different LLM provider preferences and cost constraints.
 
-**Decision:** Abstract LLM provider interface with multiple implementations.
+**Decision:** Abstract LLM provider interface with multiple implementations. OpenRouter as default for free tier access.
 
 **Supported Providers:**
+- OpenRouter (default) - 100+ models, free tier available
 - OpenAI (GPT-4o, GPT-4o-mini)
-- Anthropic (Claude 3.5)
-- Ollama (local models)
-- Groq (fast inference)
+- Anthropic (Claude 3.5 Sonnet, Haiku)
+- Ollama (local models, no API key needed)
 
 **Interface:**
 ```python

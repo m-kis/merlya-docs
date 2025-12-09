@@ -2,7 +2,11 @@
 
 Complete reference for all Merlya commands.
 
-## Starting Merlya
+## Main Commands
+
+### merlya
+
+Start the interactive REPL.
 
 ```bash
 merlya [OPTIONS]
@@ -14,6 +18,120 @@ Options:
   -q, --quiet     Suppress non-essential output
   --config FILE   Use specific config file
 ```
+
+---
+
+### merlya run
+
+Execute commands in non-interactive (batch) mode. Ideal for automation, CI/CD, and scripting.
+
+```bash
+merlya run [OPTIONS] [COMMAND]
+
+Arguments:
+  COMMAND         Natural language command to execute
+
+Options:
+  -f, --file FILE     Load tasks from YAML or text file
+  -y, --yes           Skip confirmation prompts (auto-confirm)
+  --format FORMAT     Output format: text (default) or json
+  -q, --quiet         Minimal output
+  -v, --verbose       Verbose logging
+  --help              Show help message
+```
+
+**Examples:**
+
+```bash
+# Single command
+merlya run "Check disk space on all web servers"
+
+# With auto-confirmation (for automation)
+merlya run --yes "Restart nginx on @web-01"
+
+# JSON output (for parsing)
+merlya run --format json "List all servers with high CPU"
+
+# From task file
+merlya run --file tasks.yml
+
+# Quiet mode (minimal output)
+merlya run --quiet --yes "Check server health"
+```
+
+**Task File Format (YAML):**
+
+```yaml
+# tasks.yml
+tasks:
+  - description: "Check disk space"
+    prompt: "Check disk usage on all servers, warn if above 80%"
+
+  - description: "Check memory"
+    prompt: "Check memory usage on all servers"
+
+  - prompt: "Verify nginx is running"
+```
+
+**Task File Format (Text):**
+
+```text
+# tasks.txt (one command per line)
+Check disk space on all servers
+List running services
+Verify backup status
+```
+
+**JSON Output Structure:**
+
+```json
+{
+  "success": true,
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "tasks": [
+    {
+      "task": "Check disk space",
+      "success": true,
+      "message": "Disk usage: 45% on /dev/sda1",
+      "actions": ["ssh_execute"]
+    }
+  ]
+}
+```
+
+**Exit Codes:**
+
+| Code | Meaning |
+|------|---------|
+| 0 | All tasks succeeded |
+| 1 | One or more tasks failed |
+
+---
+
+### merlya config
+
+Manage configuration settings.
+
+```bash
+merlya config <SUBCOMMAND>
+
+Subcommands:
+  show          Show current configuration
+  set KEY VAL   Set a configuration value
+  get KEY       Get a configuration value
+```
+
+**Examples:**
+
+```bash
+merlya config show
+merlya config set llm.provider openrouter
+merlya config get llm.model
+```
+
+---
 
 ## REPL Slash Commands
 

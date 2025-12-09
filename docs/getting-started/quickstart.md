@@ -7,7 +7,7 @@ Get Merlya up and running in 5 minutes.
 On first launch, Merlya's setup wizard guides you through configuration:
 
 ```bash
-merlya chat
+merlya
 ```
 
 ### Language Selection
@@ -113,7 +113,7 @@ You'll see the welcome screen with status indicators:
 ╭──────────────────────────────────────────────────────────────────╮
 │                              Welcome                              │
 ├──────────────────────────────────────────────────────────────────┤
-│  🚀 Merlya v0.5.6 - Interactive Mode                             │
+│  🚀 Merlya v0.6.0 - Interactive Mode                             │
 │                                                                   │
 │  Provider: ✅ openrouter (amazon/nova-2-lite-v1:free)            │
 │  Router: ✅ local (intent-classifier-v1)                          │
@@ -200,7 +200,8 @@ db-01    | 10.0.1.50            | admin  | known-hosts
 
 | Command | Description |
 |---------|-------------|
-| `merlya chat` | Start interactive REPL |
+| `merlya` | Start interactive REPL |
+| `merlya run "..."` | Run command non-interactively |
 | `merlya config list` | Show current configuration |
 | `merlya config set KEY VALUE` | Set a configuration value |
 | `/help` | Show available slash commands |

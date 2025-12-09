@@ -44,8 +44,11 @@ pip install merlya
 merlya config set llm.provider openai
 merlya config set llm.api_key sk-...
 
-# Start chatting with your infrastructure
-merlya chat
+# Start interactive mode
+merlya
+
+# Or run a single command
+merlya run "Check disk space on all servers"
 ```
 
 ```

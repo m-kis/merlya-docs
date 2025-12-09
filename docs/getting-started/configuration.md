@@ -2,25 +2,38 @@
 
 Merlya uses a layered configuration system with sensible defaults.
 
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `~/.merlya/config.yaml` | Main configuration |
+| `~/.merlya/merlya.db` | Hosts inventory (SQLite) |
+| `~/.merlya/history` | Command history |
+| `~/.merlya/logs/` | Log files |
+
 ## Configuration File
 
-Configuration is stored in `~/.config/merlya/config.toml`:
+Configuration is stored in `~/.merlya/config.yaml`:
 
-```toml
-[llm]
-provider = "openai"
-model = "gpt-4o-mini"
-temperature = 0.7
-max_tokens = 4096
+```yaml
+# ~/.merlya/config.yaml
+general:
+  language: en          # UI language (en, fr)
+  log_level: info       # debug, info, warning, error
 
-[ssh]
-timeout = 30
-max_connections = 10
-retry_attempts = 3
+model:
+  provider: openrouter  # openrouter, anthropic, openai, ollama
+  model: amazon/nova-2-lite-v1:free
+  api_key_env: OPENROUTER_API_KEY
 
-[logging]
-level = "INFO"
-file = "~/.config/merlya/merlya.log"
+router:
+  type: local           # local (ONNX) or llm
+  llm_fallback: openrouter:google/gemini-2.0-flash-lite-001
+
+ssh:
+  connect_timeout: 30
+  pool_timeout: 600
+  command_timeout: 60
 ```
 
 ## Setting Values
@@ -34,21 +47,23 @@ merlya config set llm.provider anthropic
 # Get a value
 merlya config get llm.provider
 
-# List all settings
-merlya config list
-
-# Reset to defaults
-merlya config reset
+# Show all settings
+merlya config show
 ```
 
 ## Environment Variables
 
-All settings can be overridden with environment variables:
+API keys and settings can be set via environment variables:
 
 ```bash
-export MERLYA_LLM_PROVIDER=openai
-export MERLYA_LLM_API_KEY=sk-...
-export MERLYA_LLM_MODEL=gpt-4o
+export OPENROUTER_API_KEY=or-xxx
+export OPENAI_API_KEY=sk-xxx
+export ANTHROPIC_API_KEY=sk-ant-xxx
+export OLLAMA_API_KEY=xxx  # For cloud Ollama only
+
+# Override settings
+export MERLYA_LOG_LEVEL=debug
+export MERLYA_ROUTER_FALLBACK=openai:gpt-4o-mini
 ```
 
 ## LLM Configuration
@@ -57,11 +72,18 @@ export MERLYA_LLM_MODEL=gpt-4o
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `llm.provider` | LLM provider (openai, anthropic, ollama) | `openai` |
-| `llm.model` | Model name | `gpt-4o-mini` |
+| `llm.provider` | LLM provider | `openrouter` |
+| `llm.model` | Model name | `amazon/nova-2-lite-v1:free` |
 | `llm.api_key` | API key (stored in keyring) | - |
-| `llm.temperature` | Response randomness (0-1) | `0.7` |
-| `llm.max_tokens` | Max response length | `4096` |
+
+**Supported Providers:**
+
+| Provider | Description |
+|----------|-------------|
+| `openrouter` | 100+ models, free tier available (default) |
+| `anthropic` | Claude models |
+| `openai` | GPT models |
+| `ollama` | Local or cloud models |
 
 ### API Keys
 
@@ -72,55 +94,67 @@ API keys are stored securely in your system keyring:
 - **Windows**: Credential Manager
 
 ```bash
-# Set API key (stored securely)
+# Set API key (stored securely in keyring)
 merlya config set llm.api_key sk-your-key
 
 # Keys are never written to config files
-cat ~/.config/merlya/config.toml | grep api_key
-# (no output)
+cat ~/.merlya/config.yaml | grep api_key
+# (no output - only api_key_env reference, not the actual key)
 ```
 
 ## SSH Configuration
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `ssh.timeout` | Connection timeout (seconds) | `30` |
-| `ssh.max_connections` | Max concurrent connections | `10` |
-| `ssh.retry_attempts` | Retry failed connections | `3` |
-| `ssh.known_hosts` | Known hosts file | `~/.ssh/known_hosts` |
+| `ssh.connect_timeout` | Connection timeout (seconds) | `30` |
+| `ssh.pool_timeout` | Pool timeout (seconds) | `600` |
+| `ssh.command_timeout` | Command execution timeout | `60` |
 
-## Hosts Configuration
+## Hosts Management
 
-Define frequently used hosts in `~/.config/merlya/hosts.toml`:
+Hosts are stored in a SQLite database (`~/.merlya/merlya.db`) and managed via slash commands:
 
-```toml
-[hosts.web-01]
-hostname = "web-01.example.com"
-user = "deploy"
-port = 22
-key = "~/.ssh/deploy_key"
+```bash
+# Add a host interactively
+/hosts add web-01
 
-[hosts.db-master]
-hostname = "db-master.internal"
-user = "admin"
-jump_host = "bastion.example.com"
+# Import from SSH config
+/hosts import ~/.ssh/config --format=ssh
 
-[groups.web-servers]
-hosts = ["web-01", "web-02", "web-03"]
+# Import from /etc/hosts
+/hosts import /etc/hosts --format=etc_hosts
 
-[groups.databases]
-hosts = ["db-master", "db-replica-01", "db-replica-02"]
+# List all hosts
+/hosts list
+
+# Show host details
+/hosts show web-01
 ```
+
+**Supported Import Formats:**
+
+| Format | Description |
+|--------|-------------|
+| `ssh` | SSH config file (`~/.ssh/config`) |
+| `etc_hosts` | Linux `/etc/hosts` format |
+| `json` | JSON array of host objects |
+| `yaml` | YAML host configuration |
+| `csv` | CSV with columns: name, hostname, port, username |
 
 ## Logging
 
+Merlya uses [loguru](https://github.com/Delgan/loguru) for logging.
+
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `logging.level` | Log level (DEBUG, INFO, WARNING, ERROR) | `INFO` |
-| `logging.file` | Log file path | `~/.config/merlya/merlya.log` |
-| `logging.format` | Log format string | `%(asctime)s - %(levelname)s - %(message)s` |
+| `general.log_level` | Console log level | `info` |
+| `logging.file_level` | File log level | `debug` |
+| `logging.max_size_mb` | Max log file size | `10` |
+
+Logs are stored in `~/.merlya/logs/`.
 
 ## Next Steps
 
 - [SSH Management Guide](../guides/ssh-management.md)
 - [LLM Providers Guide](../guides/llm-providers.md)
+- [Automation Guide](../guides/automation.md)
