@@ -32,7 +32,9 @@ general:
 
 ### general.log_level
 
-Console log level.
+!!! warning "Legacy Setting"
+    This setting is deprecated. Use `logging.console_level` instead.
+    Kept for backwards compatibility as fallback.
 
 | Type | Default | Values |
 |------|---------|--------|
@@ -40,7 +42,7 @@ Console log level.
 
 ```yaml
 general:
-  log_level: info
+  log_level: info  # Deprecated, use logging.console_level
 ```
 
 ---
@@ -328,6 +330,25 @@ ui:
 
 ## Logging Settings
 
+### logging.console_level
+
+Console log level for terminal output.
+
+| Type | Default | Values |
+|------|---------|--------|
+| string | `info` | `debug`, `info`, `warning`, `error` |
+
+```yaml
+logging:
+  console_level: info
+```
+
+!!! tip "CLI Flags"
+    Use `-v` or `--verbose` flag to override to `debug` level.
+    Use `-q` or `--quiet` flag to suppress console logging.
+
+---
+
 ### logging.file_level
 
 File log level.
@@ -435,7 +456,6 @@ Hosts are stored in a SQLite database and managed via the `/hosts` commands.
 
 general:
   language: en
-  log_level: info
 
 model:
   provider: openrouter
@@ -460,6 +480,7 @@ ui:
   syntax_highlight: true
 
 logging:
+  console_level: info
   file_level: debug
   max_size_mb: 10
   max_files: 5

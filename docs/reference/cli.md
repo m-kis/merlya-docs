@@ -370,6 +370,7 @@ Import hosts from a file.
 |--------|-------------|
 | `json` | JSON array of host objects |
 | `yaml` | YAML host configuration |
+| `toml` | TOML with `[hosts.name]` sections |
 | `csv` | CSV with columns: name, hostname, port, username, tags |
 | `ssh` | SSH config file format (`~/.ssh/config`) |
 | `etc_hosts` | Linux `/etc/hosts` format |
@@ -377,9 +378,28 @@ Import hosts from a file.
 **Examples:**
 ```
 /hosts import ~/hosts.json --format=json
+/hosts import ~/inventory.toml --format=toml
 /hosts import ~/.ssh/config --format=ssh
 /hosts import /etc/hosts --format=etc_hosts
 ```
+
+**TOML Format Example:**
+
+```toml
+[hosts.internal-db]
+hostname = "10.0.1.50"
+user = "dbadmin"
+jump_host = "bastion.example.com"
+port = 22
+tags = ["database", "production"]
+
+[hosts.bastion]
+hostname = "bastion.example.com"
+user = "admin"
+```
+
+!!! tip "Field Aliases"
+    TOML import supports aliases: `host` for `hostname`, `bastion` for `jump_host`.
 
 ---
 
