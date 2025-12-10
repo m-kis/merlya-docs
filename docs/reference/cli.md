@@ -29,7 +29,7 @@ Execute commands in non-interactive (batch) mode. Ideal for automation, CI/CD, a
 merlya run [OPTIONS] [COMMAND]
 
 Arguments:
-  COMMAND         Natural language command to execute
+  COMMAND         Natural language command or slash command to execute
 
 Options:
   -f, --file FILE     Load tasks from YAML or text file

@@ -22,7 +22,7 @@ merlya run [OPTIONS] [COMMAND]
 
 | Argument | Description |
 |----------|-------------|
-| `COMMAND` | Natural language command to execute |
+| `COMMAND` | Natural language command or slash command to execute |
 
 ### Options
 
@@ -49,6 +49,82 @@ With auto-confirmation (required for commands that modify systems):
 
 ```bash
 merlya run --yes "Restart nginx on @web-01"
+```
+
+---
+
+## Slash Commands
+
+Execute internal Merlya commands directly without AI processing:
+
+```bash
+merlya run "/scan @web-01"
+merlya run "/hosts list"
+merlya run "/health"
+```
+
+### Allowed Commands
+
+Most read-only and diagnostic commands work in batch mode:
+
+| Command | Description |
+|---------|-------------|
+| `/health` | Check system health |
+| `/hosts list` | List all hosts |
+| `/hosts show <name>` | Show host details |
+| `/hosts import <file>` | Import hosts from file |
+| `/hosts export <file>` | Export hosts to file |
+| `/hosts tag <name> <tag>` | Add tag to host |
+| `/hosts untag <name> <tag>` | Remove tag from host |
+| `/scan <host>` | Scan host for system info |
+| `/model show` | Show current model config |
+| `/model provider <name>` | Change LLM provider |
+| `/model model <name>` | Change model |
+| `/log level <level>` | Set log level |
+| `/variable list` | List variables |
+| `/variable get <name>` | Get variable value |
+| `/secret list` | List secret names |
+
+### Blocked Commands
+
+These commands are not available in batch mode:
+
+| Command | Reason |
+|---------|--------|
+| `/exit`, `/quit`, `/q` | Session control (no session in batch) |
+| `/new` | Starts new conversation |
+| `/conv`, `/conversation` | Requires conversation context |
+
+### Interactive Commands
+
+These commands require user input and cannot run in batch mode:
+
+| Command | Reason |
+|---------|--------|
+| `/hosts add <name>` | Prompts for hostname, port, username |
+| `/ssh config <host>` | Prompts for SSH configuration |
+| `/secret set <name>` | Requires secure input prompt |
+
+### Examples
+
+```bash
+# Quick health check
+merlya run "/health"
+
+# List all hosts with production tag
+merlya run "/hosts list --tag=production"
+
+# Scan a server
+merlya run "/scan @web-01 --quick"
+
+# Full scan with JSON output
+merlya run --format json "/scan @web-01 --full"
+
+# Import hosts from SSH config
+merlya run "/hosts import ~/.ssh/config --format=ssh"
+
+# Change model for subsequent commands
+merlya run "/model provider anthropic"
 ```
 
 ---
